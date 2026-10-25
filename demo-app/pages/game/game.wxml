@@ -1,0 +1,8 @@
+<canvas
+  id="game"
+  type="2d"
+  class="game-canvas"
+  disable-scroll
+  bindtouchstart="onTouchStart"
+  bindtouchmove="onTouchMove"
+></canvas>

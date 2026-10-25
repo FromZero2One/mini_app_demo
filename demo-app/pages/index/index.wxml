@@ -30,4 +30,9 @@
     <view class="card-title">关于与调试 →</view>
     <view class="text-muted">演示系统信息 API、剪贴板、tabBar 切换</view>
   </view>
+
+  <view class="card entry" hover-class="card-hover" bindtap="goGame">
+    <view class="card-title">玩一局「星河战机」 →</view>
+    <view class="text-muted">Canvas 2D 纵版射击小游戏：拖动战机、自动开火、道具升级火力</view>
+  </view>
 </view>

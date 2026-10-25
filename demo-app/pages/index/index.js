@@ -41,4 +41,8 @@ Page({
   goAbout() {
     wx.switchTab({ url: '/pages/about/about' });
   },
+
+  goGame() {
+    wx.navigateTo({ url: '/pages/game/game' });
+  },
 });

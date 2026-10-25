@@ -12,7 +12,8 @@
 
 // ==================== 环境与画布 ====================
 
-const info = wx.getWindowInfo();
+// 兼容：部分小游戏基础库没有 wx.getWindowInfo，回退到 getSystemInfoSync
+const info = typeof wx.getWindowInfo === 'function' ? wx.getWindowInfo() : wx.getSystemInfoSync();
 const W = info.windowWidth;
 const H = info.windowHeight;
 const DPR = info.pixelRatio || 1;
@@ -23,6 +24,8 @@ canvas.width = W * DPR;
 canvas.height = H * DPR;
 const ctx = canvas.getContext('2d');
 ctx.scale(DPR, DPR);
+
+console.log('[星河战机] init', { width: W, height: H, dpr: DPR });
 
 // 小游戏环境提供全局 requestAnimationFrame，这里做个兜底
 const raf = typeof requestAnimationFrame === 'function'
@@ -86,7 +89,11 @@ const stars = Array.from({ length: 70 }, () => ({
 
 wx.onTouchStart(e => {
   const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
-  if (!t) return;
+  if (!t) {
+    console.warn('[星河战机] touchstart 无坐标', e);
+    return;
+  }
+  console.log('[星河战机] touchstart, mode =', state.mode);
   if (state.mode === 'ready') {
     startGame();
     player.targetX = t.clientX;
@@ -111,6 +118,7 @@ wx.onShow(() => { state.paused = false; lastTime = Date.now(); });
 // ==================== 局内逻辑 ====================
 
 function startGame() {
+  console.log('[星河战机] startGame');
   state.mode = 'playing';
   state.time = 0;
   state.score = 0;
@@ -614,14 +622,31 @@ function render() {
 
 let lastTime = Date.now();
 
+let loopErrorCount = 0;
+
 function loop() {
-  const now = Date.now();
-  let dt = (now - lastTime) / 1000;
-  lastTime = now;
-  if (dt > 0.05) dt = 0.05; // 卡顿保护
-  update(dt);
-  render();
+  try {
+    const now = Date.now();
+    let dt = (now - lastTime) / 1000;
+    lastTime = now;
+    if (dt > 0.05) dt = 0.05; // 卡顿保护
+    update(dt);
+    render();
+  } catch (err) {
+    // 单帧异常不能打断 RAF 链，否则整个游戏会“无响应”
+    if (loopErrorCount < 3) {
+      loopErrorCount += 1;
+      console.error('[星河战机] 帧循环异常', err && (err.stack || err.message || err));
+    }
+  }
   raf(loop);
+}
+
+// 先渲染一帧：即使 RAF 有问题，也能看到画面并确认渲染正常
+try {
+  render();
+} catch (err) {
+  console.error('[星河战机] 首帧渲染失败', err && (err.stack || err.message || err));
 }
 
 raf(loop);

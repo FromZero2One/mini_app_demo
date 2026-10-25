@@ -1,0 +1,19 @@
+{
+  "name": "miniprogram-dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WeChat mini-program dev platform: demo app + mock server + canvas game + docs",
+  "scripts": {
+    "start:mock": "node mock-server/server.js",
+    "icons": "node tools/gen-icons.js",
+    "check": "node tools/check.js",
+    "test": "node --test tools/tests/game-logic.test.js tools/tests/mock-api.test.js",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "prettier": "^3.9.10"
+  }
+}

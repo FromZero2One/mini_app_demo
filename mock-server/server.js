@@ -160,7 +160,7 @@ const server = http.createServer((req, res) => {
       list = articles.filter(a => a.title.includes(keyword) || a.summary.includes(keyword));
     }
     const start = (page - 1) * size;
-    const items = list.slice(start, start + size).map(({ content, ...rest }) => rest); // 列表不返回正文
+    const items = list.slice(start, start + size).map(({ content: _content, ...rest }) => rest); // 列表不返回正文
 
     return send(res, 200, {
       code: 0,

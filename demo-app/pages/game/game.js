@@ -12,17 +12,17 @@
  */
 
 const { createAudio } = require('./audio.js');
+const {
+  clamp,
+  hit,
+  weaponPattern,
+  bossSpread,
+  bossRing,
+  bossFireInterval,
+  spawnInterval,
+} = require('./logic.js');
 
 const rand = (a, b) => a + Math.random() * (b - a);
-const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-
-/** 圆形碰撞检测 */
-function hit(a, b) {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  const r = a.r + b.r;
-  return dx * dx + dy * dy <= r * r;
-}
 
 Page({
   data: {},
@@ -243,21 +243,19 @@ Page({
 
   firePlayer() {
     const p = this.player;
-    const y = p.y - 22 * this.K;
-    const v = -640 * this.K;
+    const K = this.K;
 
     if (this.state.shotSeq % 3 === 0) this.audio.shoot();
     this.state.shotSeq += 1;
 
-    if (p.weapon === 1) {
-      this.bullets.push({ x: p.x, y, vx: 0, vy: v, r: 4 * this.K });
-    } else if (p.weapon === 2) {
-      this.bullets.push({ x: p.x - 9 * this.K, y, vx: 0, vy: v, r: 4 * this.K });
-      this.bullets.push({ x: p.x + 9 * this.K, y, vx: 0, vy: v, r: 4 * this.K });
-    } else {
-      this.bullets.push({ x: p.x, y, vx: 0, vy: v * 1.08, r: 4 * this.K });
-      this.bullets.push({ x: p.x - 12 * this.K, y: y + 4 * this.K, vx: -110 * this.K, vy: v, r: 4 * this.K });
-      this.bullets.push({ x: p.x + 12 * this.K, y: y + 4 * this.K, vx: 110 * this.K, vy: v, r: 4 * this.K });
+    for (const b of weaponPattern(p.weapon)) {
+      this.bullets.push({
+        x: p.x + b.dx * K,
+        y: p.y + b.dy * K,
+        vx: b.vx * K,
+        vy: b.vy * K,
+        r: 4 * K,
+      });
     }
   },
 
@@ -356,13 +354,7 @@ Page({
     const ang = Math.atan2(p.y - en.y, p.x - en.x);
     const speed = 210 * K;
 
-    const spreads = ratio > 0.66
-      ? [-0.22, 0, 0.22]
-      : ratio > 0.33
-        ? [-0.5, -0.25, 0, 0.25, 0.5]
-        : [-0.7, -0.35, 0, 0.35, 0.7];
-
-    for (const off of spreads) {
+    for (const off of bossSpread(ratio)) {
       this.enemyBullets.push({
         x: en.x, y: en.y + en.r * 0.5,
         vx: Math.cos(ang + off) * speed,
@@ -372,12 +364,12 @@ Page({
       });
     }
 
-    if (ratio <= 0.66) {
-      const count = ratio > 0.33 ? 10 : 14;
+    const ringCount = bossRing(ratio);
+    if (ringCount > 0) {
       const ringSpeed = 150 * K;
       const base = st.time * 1.2;
-      for (let i = 0; i < count; i++) {
-        const a = base + (i / count) * Math.PI * 2;
+      for (let i = 0; i < ringCount; i++) {
+        const a = base + (i / ringCount) * Math.PI * 2;
         this.enemyBullets.push({
           x: en.x, y: en.y,
           vx: Math.cos(a) * ringSpeed,
@@ -388,7 +380,7 @@ Page({
       }
     }
 
-    en.fireInterval = ratio > 0.66 ? 1.4 : ratio > 0.33 ? 1.2 : 1.0;
+    en.fireInterval = bossFireInterval(ratio);
   },
 
   damagePlayer() {
@@ -477,8 +469,7 @@ Page({
     st.spawnTimer -= dt;
     if (st.spawnTimer <= 0) {
       this.spawnEnemy();
-      const base = Math.max(0.35, 0.95 - st.time * 0.008) * (st.bossAlive ? 1.8 : 1);
-      st.spawnTimer = base * rand(0.75, 1.25);
+      st.spawnTimer = spawnInterval(st.time, st.bossAlive) * rand(0.75, 1.25);
     }
 
     // 玩家子弹

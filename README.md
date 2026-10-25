@@ -87,6 +87,20 @@ npm start
 **加一个新接口**：打开 `mock-server/server.js`，仿照 `/api/health` 的写法加一个
 `if (pathname === '/api/xxx') { ... }` 分支即可，改完保存，Ctrl+C 后重新 `npm start`。
 
+## 开发与质量检查
+
+根目录先安装一次开发依赖（仅 lint/格式化用，不影响小程序运行；`mock-server` 仍保持零依赖）：
+
+```bash
+npm install
+npm run lint    # ESLint（flat config）
+npm run check   # 全部 JS 语法 + JSON 合法性（零依赖，CI 同款）
+npm test        # 游戏纯逻辑单测 + mock 接口集成测试（Node 内置 test runner）
+npm run format  # Prettier 格式化
+```
+
+CI：`.github/workflows/ci.yml`，每次 push / PR 自动执行 lint → check → test。
+
 ## tools 工具说明
 
 ### gen-icons.js —— tabBar 图标生成

@@ -5,7 +5,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 **The repo is `E:\miniprogram-dev`** — the workspace root `E:\` is not the repo. `cd` in before any git/npm command.
 
 ## Layout
-- `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step). Includes a Canvas 2D game page (`pages/game`) — the playable game under the mini-program AppID.
+- `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step). Includes a Canvas 2D game page (`pages/game`; pure logic split into `pages/game/logic.js` for unit tests).
 - `mock-server/server.js` — zero-dependency HTTP API on port 3001, binds `0.0.0.0`; data is hard-coded in this file (10 articles, numeric `id`s must stay stable — detail lookup uses them).
 - `tools/gen-icons.js` — generates the 6 tabBar PNGs into `demo-app/images/` (81×81).
 - `docs/开发者入门指南.md` — structure/onboarding guide; `README.md` — platform ops. Keep both in sync with structural or API changes.
@@ -13,9 +13,11 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 ## Commands (verified)
 - Start mock API: `cd mock-server && npm start` → http://127.0.0.1:3001 (zero deps, no `npm install`; keep it that way).
 - Regenerate tabBar icons: `node tools/gen-icons.js` (overwrites `demo-app/images/tab-*.png`; never hand-edit those PNGs).
-- Syntax check: `node --check <file>`; JSON check: `node -e "JSON.parse(require('fs').readFileSync('<file>','utf8'))"`.
+- `npm run check` — every JS file passes `node --check` and every JSON parses (zero-dep `tools/check.js`).
+- `npm test` — Node built-in test runner: game pure logic (`tools/tests/game-logic.test.js`) + mock API integration on port 3199 (`tools/tests/mock-api.test.js`).
+- `npm run lint` — ESLint (flat config); `npm run format` — Prettier. `npm install` at repo root is dev-only tooling (eslint/prettier); the mini program and mock-server need no install.
 - API smoke test: `curl http://127.0.0.1:3001/api/health` (also `/api/articles?page=1&size=3`, `/api/articles/1`).
-- No lint, typecheck, test, or CI exists — do not invent commands for them.
+- CI: `.github/workflows/ci.yml` runs `npm ci` → lint → check → test on push/PR. Do not invent other commands.
 
 ## WeChat-specific gotchas
 - **DevTools rewrites `project.config.json` while open** (appid, settings, `libVersion`). Edit it only while DevTools is closed, then reopen; change AppID via 详情 → 基本信息. Otherwise your edit is silently reverted.

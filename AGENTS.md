@@ -8,7 +8,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step).
 - `mock-server/server.js` — zero-dependency HTTP API on port 3001, binds `0.0.0.0`; data is hard-coded in this file (10 articles, numeric `id`s must stay stable — detail lookup uses them).
 - `tools/gen-icons.js` — generates the 6 tabBar PNGs into `demo-app/images/` (81×81).
-- `game-demo/` — separate WeChat **mini-game** project (`compileType: "game"`, Canvas 2D, zero assets, `touristappid`). Open it as its own DevTools project; publishing needs a game-category account + 版号, so treat it as local/preview only. If DevTools rejects `touristappid`, switch to a test account on import.
+- `game-demo/` — separate WeChat **mini-game** project (`compileType: "game"`, Canvas 2D, zero assets, `touristappid`). Must be imported with project type **小游戏**; importing as 小程序 flips the session to `weapp` and fails with `app.json: 在项目根目录未找到 app.json` (there is no `app.json` — only `game.js`/`game.json`). If a wrong-type entry exists, delete the project and re-import with the right type. Publishing needs a game-category account + 版号, so treat it as local/preview only.
 - `docs/开发者入门指南.md` — structure/onboarding guide; `README.md` — platform ops. Keep both in sync with structural or API changes.
 
 ## Commands (verified)
@@ -24,7 +24,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - AppID must be a real **mini-program** AppID (current `wxa0b1412247dddd0e`). A 公众号 AppID fails with `invalid app type`; sandbox 测试号 can debug but never upload; a WeChat account without admin/developer rights fails with `-80002 登录用户不是该小程序的开发者`.
 - `utils/request.js` `BASE_URL` is a **LAN IP** (`http://192.168.31.56:3001`) so a phone on the same Wi-Fi can reach the mock. If the PC IP changes, update it; `mock-server` prints the current LAN IP at startup.
 - `project.config.json` keeps `urlCheck: false` to allow plain-HTTP local calls — keep it.
-- Debug DevTools-side failures (upload/appid/cloud) in `C:\Users\Administrator\AppData\Local\微信开发者工具\User Data\<hash>\WeappLog\logs`, read as GBK (codepage 936); errors carry the real error codes.
+- Debug DevTools-side failures (upload/appid/cloud) in `C:\Users\Administrator\AppData\Local\微信开发者工具\User Data\<hash>\WeappLog\logs`, read as GBK (codepage 936). Multiple profiles exist (different installs/accounts), so read the newest log across all `User Data\*\WeappLog\logs`; errors carry the real error codes.
 
 ## Environment quirks
 - Windows PowerShell here renders Chinese as GBK mojibake — trust the `read` tool / file bytes, not console output. Don't "fix" encoding damage that only exists on screen.

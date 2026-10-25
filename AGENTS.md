@@ -8,7 +8,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step). Data access goes through `utils/data.js` → `cloud-api.js` (default; cloud env `cloud1-d8g774cfa69b034d6`, function `cloudfunctions/articles` with ping/list/detail/seed) or `mock-api.js` (local HTTP). Includes a Canvas 2D game page (`pages/game`; pure logic split into `pages/game/logic.js` for unit tests).
 - `mock-server/server.js` — zero-dependency HTTP API on port 3001, binds `0.0.0.0`; data is hard-coded in this file (10 articles, numeric `id`s must stay stable — detail lookup uses them).
 - `tools/gen-icons.js` — generates the 6 tabBar PNGs into `demo-app/images/` (81×81).
-- `docs/开发者入门指南.md` — structure/onboarding guide; `README.md` — platform ops. Keep both in sync with structural or API changes.
+- `docs/开发者入门指南.md` — structure/onboarding guide; `docs/项目架构与进度.md` — architecture, progress, backlog, next-session entry (update its progress/backlog after each dev session); `README.md` — platform ops. Keep them in sync with structural or API changes.
 
 ## Commands (verified)
 - Start mock API: `cd mock-server && npm start` → http://127.0.0.1:3001 (zero deps, no `npm install`; keep it that way).

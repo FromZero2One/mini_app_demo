@@ -8,7 +8,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step).
 - `mock-server/server.js` — zero-dependency HTTP API on port 3001, binds `0.0.0.0`; data is hard-coded in this file (10 articles, numeric `id`s must stay stable — detail lookup uses them).
 - `tools/gen-icons.js` — generates the 6 tabBar PNGs into `demo-app/images/` (81×81).
-- `game-demo/` — separate WeChat **mini-game** project (`compileType: "game"`, Canvas 2D, zero assets, `touristappid`). Must be imported with project type **小游戏**; importing as 小程序 flips the session to `weapp` and fails with `app.json: 在项目根目录未找到 app.json` (there is no `app.json` — only `game.js`/`game.json`). If a wrong-type entry exists, delete the project and re-import with the right type. Publishing needs a game-category account + 版号, so treat it as local/preview only.
+- `game-demo/` — separate WeChat **mini-game** project (`compileType: "game"`, Canvas 2D, zero assets), using the user's AppID `wxa0b1412247dddd0e`. Must be imported with project type **小游戏**; importing as 小程序 flips the session to `weapp` and fails with `app.json: 在项目根目录未找到 app.json` (there is no `app.json` — only `game.js`/`game.json`). If a wrong-type entry exists, delete the project and re-import with the right type. Never swap the AppID for `touristappid` or a test account.
 - `docs/开发者入门指南.md` — structure/onboarding guide; `README.md` — platform ops. Keep both in sync with structural or API changes.
 
 ## Commands (verified)
@@ -34,6 +34,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - Remote: `origin` = `git@github.com:FromZero2One/mini_app_demo.git`; `main` tracks `origin/main`.
 
 ## Conventions
+- **Hard rule: always use AppID `wxa0b1412247dddd0e`** in every `project.config.json`; never use `touristappid` or a 测试号 unless the user explicitly asks.
 - UI copy, comments, and docs are Chinese; code identifiers are English.
 - Layout uses `rpx` (750rpx = screen width); 1px borders use `px`.
 - Cloud development was implemented then removed (commit `ee28f7e`). Do not reintroduce `cloudfunctions/` or a data-source switch unless explicitly requested.

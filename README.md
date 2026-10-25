@@ -14,6 +14,11 @@ miniprogram-dev\
 ├── tools\
 │   ├── gen-icons.js                   # tabBar 图标生成脚本（零依赖）
 │   └── wechat_devtools_*.exe          # 微信开发者工具稳定版安装包（Windows 64）
+├── game-demo\                         # 星河战机：小游戏 Demo（Canvas 2D，零素材）
+│   ├── game.js                        #   入口：主循环、输入、玩法、渲染
+│   ├── game.json                      #   小游戏配置（竖屏）
+│   ├── project.config.json            #   小游戏项目配置（compileType: game）
+│   └── README.md                      #   玩法与运行说明
 ├── mock-server\                       # 本地 Mock API 服务器（零依赖）
 │   ├── server.js                      # 纯 Node 内置模块实现，端口 3001
 │   └── package.json
@@ -63,6 +68,15 @@ npm start
 | 详情页 | onLoad 接收 url 参数、动态设置导航栏标题、错误重试 | `pages/detail/` |
 | 关于页 | 新版系统信息 API、剪贴板、版本回退兼容写法 | `pages/about/` |
 | 全局 | 请求封装（Promise + 业务码）、tabBar 配置、rpx 布局 | `utils/request.js`、`app.json`、`app.wxss` |
+
+## 小游戏 Demo（星河战机）
+
+`game-demo/` 是一个独立的**微信小游戏**项目——注意它和 `demo-app` 的结构完全不同：
+入口是 `game.js + game.json`，`compileType` 为 `game`，没有 WXML/页面概念，全部用 Canvas 2D 绘制。
+
+- 玩法：拖动战机自动开火、三种敌机、道具升级火力（3 级）、血量与最高分
+- 运行：开发者工具「导入项目」→ 选择 `game-demo` 即可（细节见 `game-demo/README.md`）
+- 说明：原创实现、零外部素材（无图片/音频）；小游戏发布需要游戏类目 + 版号，个人主体基本不可行，本地开发/预览不受影响
 
 ## Mock 接口文档
 

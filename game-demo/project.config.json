@@ -1,0 +1,17 @@
+{
+  "description": "Xinghe Fighter - original vertical shooter mini-game demo",
+  "compileType": "game",
+  "appid": "touristappid",
+  "projectname": "xinghe-fighter",
+  "setting": {
+    "urlCheck": false,
+    "es6": true,
+    "postcss": false,
+    "minified": false
+  },
+  "simulatorType": "wechat",
+  "editorSetting": {
+    "tabIndent": "insertSpaces",
+    "tabSize": 2
+  }
+}

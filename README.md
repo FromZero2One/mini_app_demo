@@ -14,11 +14,6 @@ miniprogram-dev\
 ├── tools\
 │   ├── gen-icons.js                   # tabBar 图标生成脚本（零依赖）
 │   └── wechat_devtools_*.exe          # 微信开发者工具稳定版安装包（Windows 64）
-├── game-demo\                         # 星河战机：小游戏 Demo（Canvas 2D，零素材）
-│   ├── game.js                        #   入口：主循环、输入、玩法、渲染
-│   ├── game.json                      #   小游戏配置（竖屏）
-│   ├── project.config.json            #   小游戏项目配置（compileType: game）
-│   └── README.md                      #   玩法与运行说明
 ├── mock-server\                       # 本地 Mock API 服务器（零依赖）
 │   ├── server.js                      # 纯 Node 内置模块实现，端口 3001
 │   └── package.json
@@ -72,12 +67,10 @@ npm start
 
 ## 小游戏（星河战机）
 
-游戏有两个版本：
+游戏以**小程序 Canvas 2D 页面**的形式运行：`demo-app/pages/game/`，使用当前小程序 AppID，开发者工具直接编译；首页点「玩一局『星河战机』」进入。
 
-- **小程序版（可直接玩）**：`demo-app/pages/game/` —— Canvas 2D 页面，使用当前小程序 AppID，开发者工具直接编译；首页点「玩一局『星河战机』」进入。玩法：拖动战机自动开火、三种敌机、道具升级火力（3 级）、血量与最高分。
-- **小游戏工程（参考）**：`game-demo/` —— 独立小游戏结构（`game.js + game.json`、`compileType: game`）。**当前账号是「小程序」类型，开发者工具会强制按小程序导入并报 `app.json` 缺失**；要作为小游戏运行需要单独的小游戏账号（游戏类目 + 版号），因此这里仅保留作对比学习。
-
-> 原创实现、零外部素材（无图片/音频）；游戏发布为小游戏需要企业资质与版号。
+- 玩法：拖动战机自动开火、三种敌机、道具升级火力（3 级）、血量与最高分
+- 说明：原创实现、零外部素材（无图片/音频）；若要做成独立「小游戏」并发布，需要小游戏账号（企业资质 + 版号）
 
 ## Mock 接口文档
 

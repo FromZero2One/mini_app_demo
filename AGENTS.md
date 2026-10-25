@@ -8,7 +8,6 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - `demo-app/` — native WeChat mini program (WXML/WXSS/JS/JSON). `app.json` `pages` array is the page registry and its first entry is the startup page; DevTools compiles directly (no build step). Includes a Canvas 2D game page (`pages/game`) — the playable game under the mini-program AppID.
 - `mock-server/server.js` — zero-dependency HTTP API on port 3001, binds `0.0.0.0`; data is hard-coded in this file (10 articles, numeric `id`s must stay stable — detail lookup uses them).
 - `tools/gen-icons.js` — generates the 6 tabBar PNGs into `demo-app/images/` (81×81).
-- `game-demo/` — standalone WeChat **mini-game** reference project (`compileType: "game"`, Canvas 2D, zero assets). The user's AppID is a mini-program account, so DevTools forces this folder to import as 小程序 and it fails with `app.json: 在项目根目录未找到 app.json`; do not try to make it run under that account. The playable version is `demo-app/pages/game/game.js` (same game as a mini-program Canvas 2D page). Never swap AppIDs.
 - `docs/开发者入门指南.md` — structure/onboarding guide; `README.md` — platform ops. Keep both in sync with structural or API changes.
 
 ## Commands (verified)

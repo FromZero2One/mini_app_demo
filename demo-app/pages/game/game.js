@@ -6,9 +6,12 @@
  * 小游戏工程需要独立的小游戏账号（企业资质 + 版号）。因此游戏以小程序的
  * canvas 2D 页面形式运行，使用同一个 AppID。
  *
- * 操作：按住屏幕左右拖动移动战机，自动开火。
- * 玩法：击落敌机得分；蓝色道具提升火力（最高 3 级）；中弹掉血并降 1 级火力。
+ * 操作：按住屏幕左右拖动（相对拖动，战机跟随手指位移），自动开火。
+ * 玩法：击落敌机得分；蓝色道具提升火力（最高 3 级）；中弹掉血并降 1 级火力；
+ *       每 60 秒出现一只 Boss（三阶段弹幕）；血量归零结束。
  */
+
+const { createAudio } = require('./audio.js');
 
 const rand = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -49,17 +52,28 @@ Page({
   },
 
   onHide() {
+    // 切后台/离开页面：暂停并停止渲染循环，省电
     this.paused = true;
+    if (this.canvas && this.rafId != null && typeof this.canvas.cancelAnimationFrame === 'function') {
+      this.canvas.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
+    }
   },
 
   onShow() {
+    // 首次进入时 canvas 还没初始化，忽略
+    if (!this.canvas) return;
+    if (!this.paused) return;
     this.paused = false;
     this.lastTime = Date.now();
+    if (this.state.mode === 'playing') this.resumeCountdown = 3;
+    this.loop();
   },
 
   onUnload() {
     if (this.canvas && this.rafId != null && typeof this.canvas.cancelAnimationFrame === 'function') {
       this.canvas.cancelAnimationFrame(this.rafId);
+      this.rafId = null;
     }
   },
 
@@ -72,7 +86,9 @@ Page({
     this.H = H;
     this.K = W / 375; // 以 375 逻辑宽为基准的缩放系数
     this.paused = false;
+    this.resumeCountdown = 0;
     this.loopErrorCount = 0;
+    this.audio = createAudio();
 
     this.state = {
       mode: 'ready',   // ready | playing | over
@@ -83,6 +99,10 @@ Page({
       spawnTimer: 1,
       shake: 0,
       overAt: 0,
+      bossTimer: 60,   // 第一只 Boss 在 60 秒时出现
+      bossAlive: false,
+      bossLevel: 0,
+      shotSeq: 0,
     };
 
     this.player = {
@@ -97,6 +117,7 @@ Page({
       targetX: W / 2,
     };
 
+    this.touchLastX = null;
     this.bullets = [];
     this.enemyBullets = [];
     this.enemies = [];
@@ -113,7 +134,6 @@ Page({
     this.lastTime = Date.now();
     this.loop = this.loop.bind(this);
 
-    // 先渲染一帧，保证立即可见
     try {
       this.render();
     } catch (err) {
@@ -124,13 +144,19 @@ Page({
 
   startGame() {
     console.log('[星河战机] startGame');
-    this.state.mode = 'playing';
-    this.state.time = 0;
-    this.state.score = 0;
-    this.state.kills = 0;
-    this.state.spawnTimer = 0.6;
-    this.state.shake = 0;
+    const st = this.state;
+    st.mode = 'playing';
+    st.time = 0;
+    st.score = 0;
+    st.kills = 0;
+    st.spawnTimer = 0.6;
+    st.shake = 0;
+    st.bossTimer = 60;
+    st.bossAlive = false;
+    st.bossLevel = 0;
+    st.shotSeq = 0;
 
+    this.resumeCountdown = 0;
     this.bullets = [];
     this.enemyBullets = [];
     this.enemies = [];
@@ -143,6 +169,7 @@ Page({
     this.player.weapon = 1;
     this.player.fireTimer = 0;
     this.player.invincible = 1.2;
+    this.touchLastX = null;
   },
 
   // ==================== 输入 ====================
@@ -151,38 +178,57 @@ Page({
     const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
     if (!t) return;
     const x = t.x != null ? t.x : t.clientX;
+
+    if (this.audio) this.audio.unlock();
+
     console.log('[星河战机] touchstart, mode =', this.state.mode);
     if (this.state.mode === 'ready') {
       this.startGame();
-      this.player.targetX = x;
+      this.touchLastX = x;
       return;
     }
     if (this.state.mode === 'over') {
       if (Date.now() - this.state.overAt > 500) this.startGame();
+      this.touchLastX = x;
       return;
     }
-    this.player.targetX = x;
+    this.touchLastX = x;
   },
 
   onTouchMove(e) {
     if (this.state.mode !== 'playing') return;
     const t = (e.touches && e.touches[0]) || (e.changedTouches && e.changedTouches[0]);
     if (!t) return;
-    this.player.targetX = t.x != null ? t.x : t.clientX;
+    const x = t.x != null ? t.x : t.clientX;
+
+    // 相对拖动：战机跟随手指位移，不会瞬移到手指位置；1.2px 死区防抖动
+    if (this.touchLastX == null) {
+      this.touchLastX = x;
+      return;
+    }
+    const dx = x - this.touchLastX;
+    this.touchLastX = x;
+    if (Math.abs(dx) < 1.2) return;
+
+    const p = this.player;
+    p.targetX = clamp(p.targetX + dx, p.r + 4, this.W - p.r - 4);
   },
 
   // ==================== 主循环 ====================
 
   loop() {
+    if (this.paused) return; // 取消后的残余帧不要再启动循环
+
     try {
       const now = Date.now();
       let dt = (now - this.lastTime) / 1000;
       this.lastTime = now;
       if (dt > 0.05) dt = 0.05; // 卡顿保护
-      if (!this.paused) {
-        this.update(dt);
-        this.render();
+      if (this.resumeCountdown > 0) {
+        this.resumeCountdown = Math.max(0, this.resumeCountdown - dt);
       }
+      this.update(dt);
+      this.render();
     } catch (err) {
       // 单帧异常不能打断 RAF 链，否则游戏会“无响应”
       if (this.loopErrorCount < 3) {
@@ -199,6 +245,10 @@ Page({
     const p = this.player;
     const y = p.y - 22 * this.K;
     const v = -640 * this.K;
+
+    if (this.state.shotSeq % 3 === 0) this.audio.shoot();
+    this.state.shotSeq += 1;
+
     if (p.weapon === 1) {
       this.bullets.push({ x: p.x, y, vx: 0, vy: v, r: 4 * this.K });
     } else if (p.weapon === 2) {
@@ -249,6 +299,30 @@ Page({
     }
   },
 
+  /** Boss：每 60 秒一只，血量与弹幕随等级增强 */
+  spawnBoss() {
+    const K = this.K;
+    const lv = this.state.bossLevel;
+    const maxHp = 90 + lv * 45;
+    this.enemies.push({
+      type: 'boss',
+      x: this.W / 2,
+      y: -110 * K,
+      r: 46 * K,
+      hp: maxHp,
+      maxHp,
+      score: 500 + lv * 100,
+      targetY: 150 * K,
+      entering: true,
+      fireTimer: 1.6,
+      fireInterval: 1.4,
+      color: '#ff5c8a',
+    });
+    this.state.bossAlive = true;
+    this.audio.bossWarn();
+    console.log('[星河战机] boss spawn, level =', lv + 1);
+  },
+
   shootAtPlayer(en) {
     const K = this.K;
     const p = this.player;
@@ -273,6 +347,50 @@ Page({
     }
   },
 
+  /** Boss 三阶段弹幕：瞄准散射 → 加环形弹幕 → 更密集 */
+  bossFire(en) {
+    const st = this.state;
+    const p = this.player;
+    const K = this.K;
+    const ratio = en.hp / en.maxHp;
+    const ang = Math.atan2(p.y - en.y, p.x - en.x);
+    const speed = 210 * K;
+
+    const spreads = ratio > 0.66
+      ? [-0.22, 0, 0.22]
+      : ratio > 0.33
+        ? [-0.5, -0.25, 0, 0.25, 0.5]
+        : [-0.7, -0.35, 0, 0.35, 0.7];
+
+    for (const off of spreads) {
+      this.enemyBullets.push({
+        x: en.x, y: en.y + en.r * 0.5,
+        vx: Math.cos(ang + off) * speed,
+        vy: Math.sin(ang + off) * speed,
+        r: 5.5 * K,
+        color: '#ff9ad0',
+      });
+    }
+
+    if (ratio <= 0.66) {
+      const count = ratio > 0.33 ? 10 : 14;
+      const ringSpeed = 150 * K;
+      const base = st.time * 1.2;
+      for (let i = 0; i < count; i++) {
+        const a = base + (i / count) * Math.PI * 2;
+        this.enemyBullets.push({
+          x: en.x, y: en.y,
+          vx: Math.cos(a) * ringSpeed,
+          vy: Math.sin(a) * ringSpeed,
+          r: 5 * K,
+          color: '#c98bff',
+        });
+      }
+    }
+
+    en.fireInterval = ratio > 0.66 ? 1.4 : ratio > 0.33 ? 1.2 : 1.0;
+  },
+
   damagePlayer() {
     const p = this.player;
     p.hp -= 1;
@@ -280,6 +398,7 @@ Page({
     p.weapon = Math.max(1, p.weapon - 1);
     this.state.shake = 14 * this.K;
     if (wx.vibrateShort) wx.vibrateShort({ type: 'heavy' });
+    this.audio.hurt();
     this.boom(p.x, p.y, 14, '#7fd7ff');
     if (p.hp <= 0) this.gameOver();
   },
@@ -287,6 +406,7 @@ Page({
   gameOver() {
     this.state.mode = 'over';
     this.state.overAt = Date.now();
+    this.audio.over();
     if (this.state.score > this.state.best) {
       this.state.best = this.state.score;
       try { wx.setStorageSync('xinghe_best', this.state.best); } catch (e) { /* ignore */ }
@@ -321,7 +441,7 @@ Page({
     const st = this.state;
     const p = this.player;
 
-    // 星空始终滚动
+    // 星空始终滚动（开始/结束/暂停倒计时界面也有动感）
     for (const s of this.stars) {
       s.y += s.v * dt;
       if (s.y > H + 2) {
@@ -330,12 +450,12 @@ Page({
       }
     }
 
-    if (st.mode !== 'playing') return;
+    if (st.mode !== 'playing' || this.resumeCountdown > 0) return;
 
     st.time += dt;
     if (st.shake > 0) st.shake = Math.max(0, st.shake - dt * 30);
 
-    // 玩家跟随手指（平滑）
+    // 玩家跟随（相对拖动 + 平滑）
     p.x += (p.targetX - p.x) * Math.min(1, dt * 14);
     p.x = clamp(p.x, p.r + 4, W - p.r - 4);
     p.invincible = Math.max(0, p.invincible - dt);
@@ -347,11 +467,17 @@ Page({
       this.firePlayer();
     }
 
-    // 敌机生成（随时间加快）
+    // Boss 计时
+    if (!st.bossAlive) {
+      st.bossTimer -= dt;
+      if (st.bossTimer <= 0) this.spawnBoss();
+    }
+
+    // 敌机生成（随时间加快；Boss 期间降频）
     st.spawnTimer -= dt;
     if (st.spawnTimer <= 0) {
       this.spawnEnemy();
-      const base = Math.max(0.35, 0.95 - st.time * 0.008);
+      const base = Math.max(0.35, 0.95 - st.time * 0.008) * (st.bossAlive ? 1.8 : 1);
       st.spawnTimer = base * rand(0.75, 1.25);
     }
 
@@ -372,9 +498,21 @@ Page({
         this.boom(b.x, b.y, 2, en.color);
         if (en.hp <= 0) {
           st.score += en.score;
-          st.kills += 1;
-          this.boom(en.x, en.y, en.type === 'elite' ? 18 : 10, en.color);
-          if (en.type === 'elite' || st.kills % 8 === 0) this.spawnPickup(en.x, en.y);
+          this.boom(en.x, en.y, en.type === 'boss' ? 40 : en.type === 'elite' ? 18 : 10, en.color);
+          this.audio.boom();
+
+          if (en.type === 'boss') {
+            st.bossAlive = false;
+            st.bossLevel += 1;
+            st.bossTimer = 60;
+            p.hp = Math.min(p.maxHp, p.hp + 1); // 击破 Boss 回 1 血
+            this.spawnPickup(en.x - 34 * K, en.y);
+            this.spawnPickup(en.x + 34 * K, en.y);
+            console.log('[星河战机] boss defeated, level =', st.bossLevel);
+          } else {
+            st.kills += 1;
+            if (en.type === 'elite' || st.kills % 8 === 0) this.spawnPickup(en.x, en.y);
+          }
           this.enemies.splice(j, 1);
         }
         break;
@@ -384,6 +522,22 @@ Page({
     // 敌机移动与射击
     for (let i = this.enemies.length - 1; i >= 0; i--) {
       const en = this.enemies[i];
+
+      if (en.type === 'boss') {
+        if (en.y < en.targetY) {
+          en.y += 70 * K * dt;
+        } else {
+          en.entering = false;
+          en.x = W / 2 + Math.sin(st.time * 0.9) * (W * 0.26);
+          en.fireTimer -= dt;
+          if (en.fireTimer <= 0) {
+            en.fireTimer = en.fireInterval;
+            this.bossFire(en);
+          }
+        }
+        continue;
+      }
+
       en.y += en.vy * dt;
       en.x += Math.sin(st.time * en.wobble + en.phase) * en.wobbleAmp * dt;
       en.fireTimer -= dt;
@@ -432,6 +586,7 @@ Page({
         p.weapon = Math.min(3, p.weapon + 1);
         st.score += 20;
         if (wx.vibrateShort) wx.vibrateShort({ type: 'light' });
+        this.audio.pickup();
         this.boom(pk.x, pk.y, 10, '#7fe7ff');
       }
     }
@@ -475,6 +630,7 @@ Page({
 
     if (st.mode === 'ready') this.drawReady();
     if (st.mode === 'over') this.drawOver();
+    if (this.resumeCountdown > 0) this.drawCountdown();
 
     ctx.restore();
   },
@@ -551,7 +707,7 @@ Page({
         ctx.lineTo(en.r, 0);
         ctx.closePath();
         ctx.fill();
-      } else {
+      } else if (en.type === 'elite') {
         ctx.beginPath();
         ctx.arc(0, 0, en.r, 0, Math.PI * 2);
         ctx.fill();
@@ -559,9 +715,29 @@ Page({
         ctx.beginPath();
         ctx.arc(0, 0, en.r * 0.55, 0, Math.PI * 2);
         ctx.fill();
+      } else {
+        // Boss：六边形母舰
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const a = Math.PI / 6 + (i * Math.PI) / 3;
+          const px = Math.cos(a) * en.r;
+          const py = Math.sin(a) * en.r * 0.85;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+        ctx.beginPath();
+        ctx.arc(0, 0, en.r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffd0e2';
+        ctx.beginPath();
+        ctx.arc(0, 0, en.r * 0.22, 0, Math.PI * 2);
+        ctx.fill();
       }
 
-      if (en.maxHp > 1) {
+      if (en.maxHp > 1 && en.type !== 'boss') {
         const w = en.r * 1.8;
         const hpRatio = en.hp / en.maxHp;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
@@ -585,8 +761,8 @@ Page({
 
   drawEnemyBullets() {
     const ctx = this.ctx;
-    ctx.fillStyle = '#ff6b6b';
     for (const b of this.enemyBullets) {
+      ctx.fillStyle = b.color || '#ff6b6b';
       ctx.beginPath();
       ctx.arc(b.x, b.y, b.r + 1, 0, Math.PI * 2);
       ctx.fill();
@@ -652,6 +828,31 @@ Page({
       ctx.arc(pad + 8 * K + i * 20 * K, this.H - 20 * K, 6 * K, 0, Math.PI * 2);
       ctx.fill();
     }
+
+    if (this.state.bossAlive) this.drawBossBar();
+  },
+
+  drawBossBar() {
+    const boss = this.enemies.find(e => e.type === 'boss');
+    if (!boss) return;
+    const ctx = this.ctx;
+    const K = this.K;
+    const w = this.W * 0.62;
+    const x = (this.W - w) / 2;
+    const y = 58 * K;
+    const h = 8 * K;
+    const ratio = Math.max(0, boss.hp / boss.maxHp);
+
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
+    ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = ratio > 0.33 ? '#ff5c8a' : '#ff2d55';
+    ctx.fillRect(x, y, w * ratio, h);
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillStyle = '#ffd0e2';
+    ctx.font = `bold ${11 * K}px sans-serif`;
+    ctx.fillText(`BOSS  Lv.${this.state.bossLevel + 1}`, this.W / 2, y - 4 * K);
   },
 
   drawCenterText(text, y, size, color, weight) {
@@ -670,6 +871,7 @@ Page({
     this.drawCenterText('纵版射击 · 原创 Demo', H * 0.3 + 44, 15, 'rgba(234, 246, 255, 0.6)');
     this.drawCenterText('按住屏幕左右拖动 · 自动开火', H * 0.52, 14, 'rgba(234, 246, 255, 0.75)');
     this.drawCenterText('吃蓝色道具提升火力', H * 0.52 + 30, 14, 'rgba(127, 231, 255, 0.85)');
+    this.drawCenterText('每 60 秒出现 Boss', H * 0.52 + 60, 14, 'rgba(255, 154, 208, 0.85)');
 
     this.ctx.globalAlpha = pulse;
     this.drawCenterText('点击屏幕开始', H * 0.72, 20, '#7fe7ff', 'bold');
@@ -692,5 +894,14 @@ Page({
     ctx.globalAlpha = pulse;
     this.drawCenterText('点击屏幕重新开始', H * 0.66, 18, '#7fe7ff', 'bold');
     ctx.globalAlpha = 1;
+  },
+
+  drawCountdown() {
+    const ctx = this.ctx;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+    ctx.fillRect(0, 0, this.W, this.H);
+    const n = Math.ceil(this.resumeCountdown);
+    const text = n > 0 ? String(n) : 'GO';
+    this.drawCenterText(text, this.H * 0.5, 56, '#7fe7ff', 'bold');
   },
 });

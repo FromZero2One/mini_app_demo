@@ -11,7 +11,9 @@
  * - 真机预览必须用电脑的局域网 IP（已按当前网络预置 192.168.31.56）
  * - 电脑 IP 变了（换了 Wi-Fi/重新拨号）要同步更新这里，用 ipconfig 查看
  */
-const BASE_URL = 'http://192.168.31.56:3001';
+const { MOCK_BASE_URL } = require('./config');
+
+const BASE_URL = MOCK_BASE_URL;
 
 function request(path, options = {}) {
   const { method = 'GET', data, timeout = 5000 } = options;

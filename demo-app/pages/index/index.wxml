@@ -2,32 +2,36 @@
   <!-- 欢迎卡片 -->
   <view class="hero card">
     <view class="hero-title">{{greeting}}，开发者</view>
-    <view class="text-muted">这是「小记」演示项目：原生微信小程序 + 本地 Mock 接口</view>
+    <view class="text-muted">这是「小记」演示项目：原生微信小程序 + {{modeLabel}}</view>
   </view>
 
-  <!-- Mock 服务状态 -->
+  <!-- 数据源状态 -->
   <view class="card">
-    <view class="card-title">接口状态</view>
+    <view class="card-title">数据源状态</view>
     <view class="row">
-      <text class="text-muted" selectable>{{baseUrl}}</text>
+      <text class="tag tag-mode">{{modeLabel}}</text>
+      <text class="text-muted endpoint" selectable>{{endpoint}}</text>
+    </view>
+    <view class="row">
+      <text class="text-muted">连通性：</text>
       <text class="tag {{apiOk ? 'tag-ok' : 'tag-err'}}">
         {{apiOk ? '已连接' : (apiChecked ? '未连接' : '检测中')}}
       </text>
     </view>
-    <button class="btn-primary" loading="{{checking}}" bindtap="checkApi">重新检测 Mock 服务</button>
+    <button class="btn-primary" loading="{{checking}}" bindtap="checkApi">重新检测</button>
     <view class="text-muted tip" wx:if="{{apiChecked && !apiOk}}">
-      未连接？先在 mock-server 目录执行 npm start
+      {{isCloud ? '请确认已部署 articles 云函数（见 README「云开发模式」）' : '未连接？先在 mock-server 目录执行 npm start'}}
     </view>
   </view>
 
   <!-- 功能入口 -->
   <view class="card entry" hover-class="card-hover" bindtap="goList">
     <view class="card-title">文章列表 →</view>
-    <view class="text-muted">演示 wx.request 调用本地接口、下拉刷新、上拉分页、页面传参</view>
+    <view class="text-muted">演示 {{modeLabel}} 数据拉取、下拉刷新、上拉分页、页面传参</view>
   </view>
 
   <view class="card entry" hover-class="card-hover" bindtap="goAbout">
     <view class="card-title">关于与调试 →</view>
-    <view class="text-muted">演示系统信息 API、剪贴板、tabBar 切换</view>
+    <view class="text-muted">数据源切换说明、云数据库初始化、系统信息 API</view>
   </view>
 </view>

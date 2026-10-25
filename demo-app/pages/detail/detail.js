@@ -1,4 +1,4 @@
-const { request } = require('../../utils/request');
+const dataApi = require('../../utils/data');
 
 Page({
   data: {
@@ -16,7 +16,7 @@ Page({
 
   fetch() {
     this.setData({ loading: true, error: '' });
-    request(`/api/articles/${this.id}`)
+    dataApi.getArticle(this.id)
       .then(article => {
         // 动态设置导航栏标题为文章标题
         wx.setNavigationBarTitle({ title: article.title });

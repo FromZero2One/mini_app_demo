@@ -4,8 +4,30 @@
     <view class="card-title">「小记」Demo</view>
     <view class="text-muted">
       原生微信小程序演示项目，覆盖：页面路由、tabBar、下拉刷新、上拉分页、
-      wx.request 封装、系统信息 API、剪贴板。
+      数据访问层封装、云开发/本地 Mock 双数据源、系统信息 API。
     </view>
+  </view>
+
+  <!-- 数据源 -->
+  <view class="card">
+    <view class="card-title">数据源</view>
+    <view class="row">
+      <text class="tag tag-mode">{{modeLabel}}</text>
+      <text class="text-muted endpoint" selectable>{{endpoint}}</text>
+      <button class="btn-mini" bindtap="copyEndpoint">复制</button>
+    </view>
+    <view class="text-muted tip">
+      切换方式：修改 utils/config.js 的 DATA_SOURCE（cloud / mock）后重新编译，页面代码不用改。
+    </view>
+  </view>
+
+  <!-- 云数据库初始化 -->
+  <view class="card" wx:if="{{isCloud}}">
+    <view class="card-title">云数据库初始化</view>
+    <view class="text-muted tip">
+      首次部署 articles 云函数后，点下面的按钮写入 10 条示例文章（幂等，已有数据会自动跳过）。
+    </view>
+    <button class="btn-primary" loading="{{seeding}}" bindtap="seedData">初始化示例数据</button>
   </view>
 
   <!-- 运行环境 -->
@@ -14,19 +36,6 @@
     <view class="info-row" wx:for="{{info}}" wx:key="k">
       <text class="info-k text-muted">{{item.k}}</text>
       <text class="info-v">{{item.v}}</text>
-    </view>
-  </view>
-
-  <!-- Mock 服务说明 -->
-  <view class="card">
-    <view class="card-title">Mock 服务</view>
-    <view class="row">
-      <text class="text-muted url" selectable>{{baseUrl}}</text>
-      <button class="btn-mini" bindtap="copyUrl">复制</button>
-    </view>
-    <view class="text-muted tip">
-      先启动 mock-server（npm start），列表页才有数据。
-      真机预览走局域网地址（已预置在 utils/request.js），电脑 IP 变了要同步更新。
     </view>
   </view>
 </view>

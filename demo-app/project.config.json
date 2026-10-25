@@ -3,6 +3,7 @@
   "compileType": "miniprogram",
   "appid": "wxa0b1412247dddd0e",
   "projectname": "xiaoji-demo",
+  "cloudfunctionRoot": "cloudfunctions/",
   "packOptions": {
     "ignore": [],
     "include": []

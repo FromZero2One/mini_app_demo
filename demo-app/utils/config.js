@@ -7,7 +7,7 @@
  *
  * 切换方式：改这一行，重新编译即可，页面代码无需改动。
  */
-const DATA_SOURCE = 'cloud';
+const DATA_SOURCE = 'mock';
 
 const CLOUD_ENV = 'cloud1-d8g774cfa69b034d6';
 const MOCK_BASE_URL = 'http://192.168.31.56:3001';

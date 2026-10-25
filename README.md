@@ -54,10 +54,10 @@ miniprogram-dev\
 
 | 模式 | 需要准备 | 适用 |
 |---|---|---|
-| **云开发**（默认） | 部署云函数 + 初始化数据（见下文「云开发模式」），之后**无需电脑** | 真机体验版、日常使用 |
-| **本地 Mock** | `cd mock-server && npm start`，手机与电脑同一 Wi-Fi | 离线开发、不想用云 |
+| **本地 Mock**（默认） | `cd mock-server && npm start`，手机与电脑同一 Wi-Fi | 离线开发、快速上手 |
+| **云开发**（可选） | 开通云环境 + 部署云函数 + 初始化数据（见下文「云开发模式」），之后**无需电脑** | 真机体验版、日常使用 |
 
-切换方式：改 `demo-app/utils/config.js` 里的 `DATA_SOURCE`（`cloud` / `mock`），重新编译即可，**页面代码零改动**。
+切换方式：改 `demo-app/utils/config.js` 里的 `DATA_SOURCE`（`mock` / `cloud`），重新编译即可，**页面代码零改动**。
 
 ## Demo 功能导览
 
@@ -84,7 +84,7 @@ miniprogram-dev\
 **加一个新接口**：打开 `mock-server/server.js`，仿照 `/api/health` 的写法加一个
 `if (pathname === '/api/xxx') { ... }` 分支即可，改完保存，Ctrl+C 后重新 `npm start`。
 
-## 云开发模式（默认）
+## 云开发模式（可选）
 
 数据已接入微信云开发：**云函数 `articles` + 云数据库集合 `articles`**，手机上使用时不再依赖电脑上的 mock 服务。
 

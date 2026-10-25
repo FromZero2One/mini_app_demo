@@ -1,0 +1,29 @@
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-k {
+  flex-shrink: 0;
+}
+
+.info-v {
+  margin-left: 24rpx;
+  text-align: right;
+  word-break: break-all;
+}
+
+.url {
+  word-break: break-all;
+}
+
+.tip {
+  margin-top: 12rpx;
+  line-height: 1.6;
+}

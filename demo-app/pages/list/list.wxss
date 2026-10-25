@@ -1,0 +1,18 @@
+.article-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+
+.summary {
+  line-height: 1.6;
+}
+
+.meta {
+  margin-top: 14rpx;
+}
+
+.footer {
+  text-align: center;
+  padding: 20rpx 0 40rpx;
+}

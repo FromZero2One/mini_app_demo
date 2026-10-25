@@ -1,0 +1,102 @@
+/**
+ * 全局样式：所有页面共享
+ * 注意 page 相当于 HTML 里的 body
+ */
+page {
+  background: #f6f7fb;
+  color: #333;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* 通用容器：页面留边距 */
+.container {
+  padding: 24rpx;
+}
+
+/* 通用卡片 */
+.card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+}
+
+/* 卡片按下去的反馈 */
+.card-hover {
+  background: #f0f4fa;
+}
+
+.card-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+
+/* 次要文字 */
+.text-muted {
+  color: #999;
+  font-size: 24rpx;
+}
+
+/* 居中容器（加载中/错误提示） */
+.center {
+  text-align: center;
+  padding: 60rpx 28rpx;
+}
+
+/* 主按钮 */
+.btn-primary {
+  margin-top: 20rpx;
+  background: #1a73e8;
+  color: #ffffff;
+  border-radius: 12rpx;
+  font-size: 30rpx;
+}
+
+.btn-primary::after {
+  border: none;
+}
+
+/* 小按钮 */
+.btn-mini {
+  margin-left: 16rpx;
+  padding: 0 24rpx;
+  height: 52rpx;
+  line-height: 52rpx;
+  font-size: 24rpx;
+  background: #e8f0fe;
+  color: #1a73e8;
+  border-radius: 10rpx;
+}
+
+.btn-mini::after {
+  border: none;
+}
+
+/* 横向排列 */
+.row {
+  display: flex;
+  align-items: center;
+  margin: 12rpx 0;
+}
+
+/* 标签 */
+.tag {
+  display: inline-block;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+  margin-left: 16rpx;
+}
+
+.tag-ok {
+  background: #e6f4ea;
+  color: #1e8e3e;
+}
+
+.tag-err {
+  background: #fce8e6;
+  color: #d93025;
+}

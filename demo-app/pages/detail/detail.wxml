@@ -1,0 +1,21 @@
+<view class="container">
+  <view wx:if="{{loading}}" class="card center">
+    <view class="text-muted">加载中…</view>
+  </view>
+
+  <view wx:elif="{{error}}" class="card center">
+    <view class="text-muted">{{error}}</view>
+    <button class="btn-primary" bindtap="retry">重试</button>
+  </view>
+
+  <block wx:else>
+    <view class="card">
+      <view class="detail-title">{{article.title}}</view>
+      <view class="meta text-muted">{{article.author}} · {{article.date}}</view>
+    </view>
+
+    <view class="card">
+      <view class="paragraph" wx:for="{{paragraphs}}" wx:key="index">{{item}}</view>
+    </view>
+  </block>
+</view>

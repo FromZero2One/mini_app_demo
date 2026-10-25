@@ -1,0 +1,14 @@
+# 微信开发者工具生成的个人本地设置（不应提交到仓库）
+project.private.config.json
+
+# 大体积安装包（非代码，按 README 自行下载）
+tools/*.exe
+
+# 依赖与缓存
+node_modules/
+*.log
+
+# 系统文件
+.DS_Store
+Thumbs.db
+desktop.ini

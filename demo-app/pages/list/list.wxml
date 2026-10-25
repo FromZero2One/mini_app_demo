@@ -1,0 +1,33 @@
+<view class="container">
+  <!-- 首次加载中 -->
+  <view wx:if="{{loading && !articles.length}}" class="card center">
+    <view class="text-muted">加载中…</view>
+  </view>
+
+  <!-- 加载失败 -->
+  <view wx:elif="{{error && !articles.length}}" class="card center">
+    <view class="text-muted">{{error}}</view>
+    <button class="btn-primary" bindtap="reload">重试</button>
+  </view>
+
+  <!-- 文章列表 -->
+  <block wx:else>
+    <view
+      class="card article"
+      wx:for="{{articles}}"
+      wx:key="id"
+      hover-class="card-hover"
+      bindtap="openDetail"
+      data-id="{{item.id}}"
+    >
+      <view class="article-title">{{item.title}}</view>
+      <view class="text-muted summary">{{item.summary}}</view>
+      <view class="meta text-muted">{{item.author}} · {{item.date}}</view>
+    </view>
+
+    <!-- 底部状态 -->
+    <view class="footer text-muted">
+      {{loading ? '加载中…' : (hasMore ? '上拉加载更多' : '— 没有更多了 —')}}
+    </view>
+  </block>
+</view>

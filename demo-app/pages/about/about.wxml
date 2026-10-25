@@ -1,0 +1,32 @@
+<view class="container">
+  <!-- 项目介绍 -->
+  <view class="card">
+    <view class="card-title">「小记」Demo</view>
+    <view class="text-muted">
+      原生微信小程序演示项目，覆盖：页面路由、tabBar、下拉刷新、上拉分页、
+      wx.request 封装、系统信息 API、剪贴板。
+    </view>
+  </view>
+
+  <!-- 运行环境 -->
+  <view class="card">
+    <view class="card-title">运行环境</view>
+    <view class="info-row" wx:for="{{info}}" wx:key="k">
+      <text class="info-k text-muted">{{item.k}}</text>
+      <text class="info-v">{{item.v}}</text>
+    </view>
+  </view>
+
+  <!-- Mock 服务说明 -->
+  <view class="card">
+    <view class="card-title">Mock 服务</view>
+    <view class="row">
+      <text class="text-muted url" selectable>{{baseUrl}}</text>
+      <button class="btn-mini" bindtap="copyUrl">复制</button>
+    </view>
+    <view class="text-muted tip">
+      先启动 mock-server（npm start），列表页才有数据。
+      真机预览走局域网地址（已预置在 utils/request.js），电脑 IP 变了要同步更新。
+    </view>
+  </view>
+</view>

@@ -1,14 +1,8 @@
-const { DATA_SOURCE, MODE_LABEL, CLOUD_ENV, MOCK_BASE_URL } = require('../../utils/config');
-const dataApi = require('../../utils/data');
-
-const ENDPOINT = DATA_SOURCE === 'cloud' ? CLOUD_ENV : MOCK_BASE_URL;
+const { BASE_URL } = require('../../utils/request');
 
 Page({
   data: {
-    modeLabel: MODE_LABEL,
-    endpoint: ENDPOINT,
-    isCloud: DATA_SOURCE === 'cloud',
-    seeding: false,
+    baseUrl: BASE_URL,
     info: [],  // 运行环境信息 [{k, v}]
   },
 
@@ -48,29 +42,11 @@ Page({
     this.setData({ info: items });
   },
 
-  /** 复制数据源标识（云环境 ID 或 mock 地址） */
-  copyEndpoint() {
+  /** 复制 Mock 服务地址到剪贴板 */
+  copyUrl() {
     wx.setClipboardData({
-      data: this.data.endpoint,
+      data: this.data.baseUrl,
       success: () => wx.showToast({ title: '已复制', icon: 'success' }),
     });
-  },
-
-  /** 初始化云数据库示例数据（仅云开发模式，首次部署后点一次） */
-  seedData() {
-    if (this.data.seeding) return;
-    this.setData({ seeding: true });
-    dataApi.seed()
-      .then(r => {
-        wx.showModal({
-          title: r.seeded ? '初始化完成' : '无需初始化',
-          content: r.seeded ? `已写入 ${r.inserted} 条示例数据` : `集合已有 ${r.total} 条数据，未重复写入`,
-          showCancel: false,
-        });
-      })
-      .catch(err => {
-        wx.showModal({ title: '初始化失败', content: err.message, showCancel: false });
-      })
-      .finally(() => this.setData({ seeding: false }));
   },
 });

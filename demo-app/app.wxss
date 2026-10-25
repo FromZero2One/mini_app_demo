@@ -100,16 +100,3 @@ page {
   background: #fce8e6;
   color: #d93025;
 }
-
-/* 数据源标签 */
-.tag-mode {
-  background: #fef7e0;
-  color: #b06000;
-  margin-left: 0;
-}
-
-/* 长地址/环境 ID 换行 */
-.endpoint {
-  flex: 1;
-  word-break: break-all;
-}

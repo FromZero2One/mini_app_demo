@@ -1,6 +1,6 @@
-const dataApi = require('../../utils/data');
+const { request } = require('../../utils/request');
 
-const PAGE_SIZE = 5; // 每页条数
+const PAGE_SIZE = 5; // 每页条数，与 mock 服务端保持一致
 
 Page({
   data: {
@@ -34,7 +34,7 @@ Page({
 
   loadPage(page, stopPull = false) {
     this.setData({ loading: true });
-    dataApi.getArticles({ page, size: PAGE_SIZE })
+    request('/api/articles', { data: { page, size: PAGE_SIZE } })
       .then(data => {
         this.setData({
           articles: page === 1 ? data.list : this.data.articles.concat(data.list),

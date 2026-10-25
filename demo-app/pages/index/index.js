@@ -1,15 +1,9 @@
-const { DATA_SOURCE, MODE_LABEL, CLOUD_ENV, MOCK_BASE_URL } = require('../../utils/config');
-const dataApi = require('../../utils/data');
-
-// 当前数据源的地址（云开发显示环境 ID，mock 显示服务地址）
-const ENDPOINT = DATA_SOURCE === 'cloud' ? CLOUD_ENV : MOCK_BASE_URL;
+const { request, BASE_URL } = require('../../utils/request');
 
 Page({
   data: {
     greeting: '',
-    modeLabel: MODE_LABEL,
-    endpoint: ENDPOINT,
-    isCloud: DATA_SOURCE === 'cloud',
+    baseUrl: BASE_URL,
     apiOk: false,
     apiChecked: false,
     checking: false,
@@ -27,13 +21,13 @@ Page({
   },
 
   onShow() {
-    // 每次切到首页时自动检测一次数据源
+    // 每次切到首页时自动检测一次 mock 服务
     this.checkApi();
   },
 
   checkApi() {
     this.setData({ checking: true });
-    dataApi.checkHealth()
+    request('/api/health')
       .then(() => this.setData({ apiOk: true, apiChecked: true }))
       .catch(() => this.setData({ apiOk: false, apiChecked: true }))
       .finally(() => this.setData({ checking: false }));

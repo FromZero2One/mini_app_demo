@@ -1,6 +1,6 @@
 # 微信小程序开发平台（miniprogram-dev）
 
-一套开箱即用的原生微信小程序开发环境：**demo 项目 + 云开发/本地 Mock 双数据源 + 工具脚本 + 开发者工具安装包**，已配置正式 AppID 与云开发环境，导入微信开发者工具即可运行。
+一套开箱即用的原生微信小程序开发环境：**demo 项目 + 本地 Mock 接口 + 工具脚本 + 开发者工具安装包**，已配置正式 AppID，导入微信开发者工具即可运行。
 
 > 新手建议先读 **[开发者入门指南](docs/开发者入门指南.md)**：项目结构、必需文件、完整开发流程、常见错误速查。
 
@@ -18,56 +18,51 @@ miniprogram-dev\
 │   ├── server.js                      # 纯 Node 内置模块实现，端口 3001
 │   └── package.json
 └── demo-app\                          # 「小记」原生小程序 Demo
-    ├── project.config.json            # 正式 AppID、云函数根目录、关闭域名校验
+    ├── project.config.json            # 正式 AppID、关闭域名校验
     ├── app.js / app.json / app.wxss / sitemap.json
-    ├── utils\
-    │   ├── config.js                  # 数据源开关（cloud / mock）、云环境 ID
-    │   ├── data.js                    # 统一入口：按开关分发到云或 mock
-    │   ├── cloud-api.js               # 云函数调用封装
-    │   ├── mock-api.js                # 本地 HTTP 封装
-    │   └── request.js                 # wx.request 的 Promise 封装
-    ├── cloudfunctions\
-    │   └── articles\                  # 云函数：list / detail / seed / ping
+    ├── utils\request.js               # wx.request 的 Promise 封装
     ├── images\                        # tabBar 图标（由 gen-icons.js 生成）
     └── pages\
-        ├── index\                     # 首页：数据源状态检测、功能入口
-        ├── list\                      # 列表页：分页 + 下拉刷新 + 上拉加载
+        ├── index\                     # 首页：问候、Mock 服务状态检测、功能入口
+        ├── list\                      # 列表页：接口分页 + 下拉刷新 + 上加载更多
         ├── detail\                    # 详情页：url 传参 + 动态导航栏标题
-        └── about\                     # 关于页：数据源信息、云数据初始化、系统 API
+        └── about\                     # 关于页：系统信息 API + 剪贴板
 ```
 
-## 快速开始
+## 快速开始（3 步）
 
-### 1. 安装微信开发者工具
+### 1. 启动本地 Mock 服务
+
+```bash
+cd mock-server
+npm start
+```
+
+看到 `Mock API 已启动: http://127.0.0.1:3001` 即成功。浏览器打开
+<http://127.0.0.1:3001/api/health> 可直接验证。
+
+### 2. 安装微信开发者工具
 
 双击 `tools\` 目录下的安装包（微信官方稳定版 2.01.2510260），按提示完成安装。
 首次启动用微信扫码登录，登录的微信号需为小程序管理员或项目成员。
 
-### 2. 导入 Demo 项目
+### 3. 导入 Demo 项目
 
 开发者工具中：**项目 → 导入项目 → 目录选择 `demo-app` 文件夹**。
 
 - AppID 自动读取项目里预置的正式 AppID（`wxa0b1412247dddd0e`），直接点「导入」
-- 导入后模拟器自动编译运行
-
-### 3. 选数据源（默认云开发）
-
-| 模式 | 需要准备 | 适用 |
-|---|---|---|
-| **本地 Mock**（默认） | `cd mock-server && npm start`，手机与电脑同一 Wi-Fi | 离线开发、快速上手 |
-| **云开发**（可选） | 开通云环境 + 部署云函数 + 初始化数据（见下文「云开发模式」），之后**无需电脑** | 真机体验版、日常使用 |
-
-切换方式：改 `demo-app/utils/config.js` 里的 `DATA_SOURCE`（`mock` / `cloud`），重新编译即可，**页面代码零改动**。
+- 导入后模拟器自动编译运行，首页会显示「已连接」表示 Mock 服务联通
+- 试试：列表页下拉刷新、上拉翻页、点卡片进详情页
 
 ## Demo 功能导览
 
 | 页面 | 演示知识点 | 对应源码 |
 |---|---|---|
-| 首页 | 时段问候、数据源健康检查、switchTab 跳转 | `pages/index/` |
-| 列表页 | 分页加载、下拉刷新、上拉加载更多、data-* 传参 | `pages/list/` |
+| 首页 | 时段问候、wx.request 健康检查、switchTab 跳转 | `pages/index/` |
+| 列表页 | 接口分页加载、下拉刷新、上拉加载更多、data-* 传参 | `pages/list/` |
 | 详情页 | onLoad 接收 url 参数、动态设置导航栏标题、错误重试 | `pages/detail/` |
-| 关于页 | 数据源信息、云数据库初始化、系统信息 API | `pages/about/` |
-| 全局 | 双数据源架构、请求封装、tabBar 配置、rpx 布局 | `utils/`、`app.js`、`app.json` |
+| 关于页 | 新版系统信息 API、剪贴板、版本回退兼容写法 | `pages/about/` |
+| 全局 | 请求封装（Promise + 业务码）、tabBar 配置、rpx 布局 | `utils/request.js`、`app.json`、`app.wxss` |
 
 ## Mock 接口文档
 
@@ -83,36 +78,6 @@ miniprogram-dev\
 
 **加一个新接口**：打开 `mock-server/server.js`，仿照 `/api/health` 的写法加一个
 `if (pathname === '/api/xxx') { ... }` 分支即可，改完保存，Ctrl+C 后重新 `npm start`。
-
-## 云开发模式（可选）
-
-数据已接入微信云开发：**云函数 `articles` + 云数据库集合 `articles`**，手机上使用时不再依赖电脑上的 mock 服务。
-
-### 首次部署（只需一次）
-
-1. **重启开发者工具**：`project.config.json` 已配置 `cloudfunctionRoot: "cloudfunctions/"`，重启后 `cloudfunctions` 目录才会显示云函数标识
-2. **确认云环境**：`utils/config.js` 的 `CLOUD_ENV` 需与你的云开发环境 ID 一致（当前：`cloud1-d8g774cfa69b034d6`）
-3. **部署云函数**：项目树里右键 `cloudfunctions/articles` →「上传并部署：云端安装依赖」，等待成功提示
-4. **初始化数据**：重新编译 → 进入「关于」页 → 点「初始化示例数据」（幂等，只写一次）
-5. 回首页看到「数据源状态」已连接、列表页有数据即完成
-
-### 云函数接口（单函数多 action）
-
-| action | 说明 | 参数 |
-|---|---|---|
-| `ping` | 健康检查 | 无 |
-| `list` | 文章列表（不含正文） | `page`、`size`、`keyword` |
-| `detail` | 文章详情 | `id` |
-| `seed` | 初始化示例数据（幂等） | 无 |
-
-返回格式与 mock 完全一致：`{ code, message, data }`。
-
-### 注意
-
-- 集合 `articles` 由 `seed` 自动创建；若提示不存在且创建失败，到云开发控制台手动建同名集合
-- 云函数修改后必须**重新上传部署**才生效
-- 云开发免费额度对学习足够，长期高频使用请关注控制台用量
-- 暂时不想用云：把 `DATA_SOURCE` 改为 `mock`，启动 `mock-server` 即可，页面无需改动
 
 ## tools 工具说明
 
@@ -134,14 +99,14 @@ node tools/gen-icons.js     # 输出到 demo-app/images/
 本项目已在 `project.config.json` 预置 `"urlCheck": false`。如果仍提示，在开发者工具
 右上角「详情 → 本地设置」勾选「不校验合法域名、web-view（业务域名）、TLS 版本以及 HTTPS 证书」。
 
-**Q：列表页一直显示「网络异常」/「云函数调用失败」？**
-- 云开发模式：确认 `articles` 云函数已部署（右键云函数目录 → 上传并部署），并在「关于」页执行过「初始化示例数据」
-- Mock 模式：Mock 服务没启动，回到 `mock-server` 目录执行 `npm start`
-- 首页「数据源状态」卡片会显示当前模式与连通性，先看它
+**Q：列表页一直显示「网络异常」？**
+Mock 服务没启动。回到 `mock-server` 目录执行 `npm start`；首页的「接口状态」卡片可快速诊断。
 
 **Q：真机预览时请求不通？**
-- 云开发模式：不依赖局域网，检查云函数是否部署成功即可
-- Mock 模式：`BASE_URL` 已按当前网络预置为 `http://192.168.31.56:3001`。排查：① 手机与电脑是否同一 Wi-Fi；② 电脑局域网 IP 是否变了（`ipconfig` 查看 WLAN 的 IPv4，变了就改 `utils/config.js` 的 `MOCK_BASE_URL`）；③ Windows 防火墙是否放行了 3001 端口
+本项目已按当前网络预置好：`BASE_URL = http://192.168.31.56:3001`，mock 服务监听
+0.0.0.0。不通时按顺序排查：① 手机和电脑是否连的同一个 Wi-Fi；② 电脑局域网 IP
+是否变了（`ipconfig` 查看 WLAN 的 IPv4，变了就同步更新 `demo-app/utils/request.js`
+的 `BASE_URL`）；③ Windows 防火墙是否放行了 Node.js / 3001 端口（首次监听时弹窗要点「允许访问」）。
 
 **Q：项目用的什么 AppID？能发布上线吗？**
 项目预置的是个人主体正式账号的 AppID（`wxa0b1412247dddd0e`）。本地开发、真机预览、
@@ -163,7 +128,6 @@ mp.weixin.qq.com 后台「版本管理」里提交审核 → 审核通过后手�
 ## 下一步建议
 
 1. 对照 `pages/list/` 源码理解「数据驱动视图」：改 `data` 必须 `setData`
-2. 数据源层实践：在 `utils/cloud-api.js` 和 `utils/mock-api.js` 同步新增一个接口，体会双实现的好处
-3. 给云函数加 `create` action + 列表页新建文章表单，数据真正可写
-4. 学习本地存储：把列表数据缓存到 Storage，实现「无网秒开」
-5. 需要组件化时，在 `demo-app/components/` 下创建自定义组件（官方文档：组件模板与样式）
+2. 给 mock 服务加一个 `POST /api/articles` 新建文章接口，并在列表页加个表单页
+3. 学习本地存储：把列表数据缓存到 Storage，实现「无网秒开」
+4. 需要组件化时，在 `demo-app/components/` 下创建自定义组件（官方文档：组件模板与样式）

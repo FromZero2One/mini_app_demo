@@ -16,7 +16,7 @@ WeChat mini-program dev platform: a native demo app + a zero-dependency Node moc
 - `npm run check` — every JS file passes `node --check` and every JSON parses (zero-dep `tools/check.js`).
 - `npm test` — Node built-in test runner: game pure logic (`tools/tests/game-logic.test.js`) + mock API integration on port 3199 (`tools/tests/mock-api.test.js`).
 - `npm run lint` — ESLint (flat config); `npm run format` — Prettier. `npm install` at repo root is dev-only tooling (eslint/prettier); the mini program and mock-server need no install.
-- Cloud deploy (manual, DevTools only): fully restart DevTools so `cloudfunctionRoot` is picked up, right-click `cloudfunctions/articles` →「上传并部署：云端安装依赖」, then open the 关于 page and tap「初始化示例数据」(seed is idempotent). Then `npm run check` still applies, but cloud calls cannot be verified locally.
+- Cloud deploy (manual, DevTools only): fully restart DevTools so `cloudfunctionRoot` is picked up, right-click `cloudfunctions/articles` →「上传并部署：云端安装依赖」. The app auto-seeds on launch (idempotent) and the 关于 page offers a manual seed button. Cloud calls cannot be verified locally.
 - API smoke test: `curl http://127.0.0.1:3001/api/health` (also `/api/articles?page=1&size=3`, `/api/articles/1`).
 - CI: `.github/workflows/ci.yml` runs `npm ci` → lint → check → test on push/PR. Do not invent other commands.
 

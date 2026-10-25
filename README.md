@@ -105,7 +105,7 @@ miniprogram-dev\
 1. **完全重启开发者工具**：`project.config.json` 已配置 `cloudfunctionRoot: "cloudfunctions/"`，重启后 `cloudfunctions` 目录才会显示云函数图标
 2. **确认云环境**：`utils/config.js` 的 `CLOUD_ENV` 与环境 ID 一致（当前：`cloud1-d8g774cfa69b034d6`）
 3. **部署云函数**：右键 `cloudfunctions/articles` →「上传并部署：云端安装依赖」，等待成功
-4. **初始化数据**：重新编译 → 进入「关于」页 → 点「初始化示例数据」（自动建集合 + 写入 10 条示例，幂等）
+4. **初始化数据**：重新编译 → 首次启动会自动写入 10 条示例数据（幂等）；也可在「关于」页手动点「初始化示例数据」
 5. 回首页看到「数据源状态：云开发 · 已连接」、列表页有数据即完成
 
 ### 云函数接口（单函数多 action）

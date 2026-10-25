@@ -1,5 +1,6 @@
 // 「小记」Demo —— 应用入口
 const { DATA_SOURCE, CLOUD_ENV } = require('./utils/config');
+const dataApi = require('./utils/data');
 
 App({
   onLaunch() {
@@ -12,6 +13,12 @@ App({
       } else {
         wx.cloud.init({ env: CLOUD_ENV, traceUser: true });
         console.log('[小记] 云开发已初始化，env =', CLOUD_ENV);
+
+        // 自动初始化示例数据：seed 幂等（集合已有数据会跳过）；
+        // 云函数还没部署时会静默失败，不影响启动。
+        dataApi.seed()
+          .then(r => console.log('[小记] 数据初始化:', r.seeded ? `写入 ${r.inserted} 条` : `已有 ${r.total} 条`))
+          .catch(() => { /* 云函数未部署，忽略 */ });
       }
     }
   },

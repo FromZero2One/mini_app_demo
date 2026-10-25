@@ -1,6 +1,6 @@
 # 微信小程序开发平台（miniprogram-dev）
 
-一套开箱即用的原生微信小程序开发环境：**demo 项目 + 本地 Mock 接口 + 工具脚本 + 开发者工具安装包**，已配置正式 AppID，导入微信开发者工具即可运行。
+一套开箱即用的原生微信小程序开发环境：**demo 项目 + 云开发/本地 Mock 双数据源 + 工具脚本 + 开发者工具安装包**，已配置正式 AppID 与云开发环境，导入微信开发者工具即可运行。
 
 > 新手建议先读 **[开发者入门指南](docs/开发者入门指南.md)**：项目结构、必需文件、完整开发流程、常见错误速查。
 
@@ -11,59 +11,68 @@ miniprogram-dev\
 ├── README.md                          # 本文件
 ├── docs\
 │   └── 开发者入门指南.md              # 项目结构 + 开发流程 + 错误速查
+├── package.json                       # 开发脚本（lint / check / test / format）
 ├── tools\
 │   ├── gen-icons.js                   # tabBar 图标生成脚本（零依赖）
+│   ├── check.js                       # JS 语法 + JSON 校验（零依赖）
+│   ├── tests\                         # 游戏逻辑 + mock 接口单测
 │   └── wechat_devtools_*.exe          # 微信开发者工具稳定版安装包（Windows 64）
 ├── mock-server\                       # 本地 Mock API 服务器（零依赖）
 │   ├── server.js                      # 纯 Node 内置模块实现，端口 3001
 │   └── package.json
 └── demo-app\                          # 「小记」原生小程序 Demo
-    ├── project.config.json            # 正式 AppID、关闭域名校验
+    ├── project.config.json            # 正式 AppID、云函数根目录、关闭域名校验
     ├── app.js / app.json / app.wxss / sitemap.json
-    ├── utils\request.js               # wx.request 的 Promise 封装
+    ├── utils\
+    │   ├── config.js                  # 数据源开关（cloud / mock）、云环境 ID
+    │   ├── data.js                    # 统一入口：按开关分发
+    │   ├── cloud-api.js               # 云函数调用封装
+    │   ├── mock-api.js                # 本地 HTTP 封装
+    │   └── request.js                 # wx.request 的 Promise 封装
+    ├── cloudfunctions\
+    │   └── articles\                  # 云函数：ping / list / detail / seed
     ├── images\                        # tabBar 图标（由 gen-icons.js 生成）
     └── pages\
-        ├── index\                     # 首页：问候、Mock 服务状态检测、功能入口
-        ├── list\                      # 列表页：接口分页 + 下拉刷新 + 上加载更多
+        ├── index\                     # 首页：数据源状态检测、功能入口
+        ├── list\                      # 列表页：分页 + 下拉刷新 + 上拉加载
         ├── detail\                    # 详情页：url 传参 + 动态导航栏标题
-        ├── about\                     # 关于页：系统信息 API + 剪贴板
+        ├── about\                     # 关于页：数据源信息、云数据初始化、系统 API
         └── game\                      # 星河战机：Canvas 2D 纵版射击（小程序版）
 ```
 
-## 快速开始（3 步）
+## 快速开始
 
-### 1. 启动本地 Mock 服务
-
-```bash
-cd mock-server
-npm start
-```
-
-看到 `Mock API 已启动: http://127.0.0.1:3001` 即成功。浏览器打开
-<http://127.0.0.1:3001/api/health> 可直接验证。
-
-### 2. 安装微信开发者工具
+### 1. 安装微信开发者工具
 
 双击 `tools\` 目录下的安装包（微信官方稳定版 2.01.2510260），按提示完成安装。
 首次启动用微信扫码登录，登录的微信号需为小程序管理员或项目成员。
 
-### 3. 导入 Demo 项目
+### 2. 导入 Demo 项目
 
 开发者工具中：**项目 → 导入项目 → 目录选择 `demo-app` 文件夹**。
 
 - AppID 自动读取项目里预置的正式 AppID（`wxa0b1412247dddd0e`），直接点「导入」
-- 导入后模拟器自动编译运行，首页会显示「已连接」表示 Mock 服务联通
-- 试试：列表页下拉刷新、上拉翻页、点卡片进详情页
+- 导入后模拟器自动编译运行
+
+### 3. 选择数据源（默认云开发）
+
+| 模式 | 需要准备 | 适用 |
+|---|---|---|
+| **云开发**（默认） | 部署云函数 + 初始化数据（见「云开发模式」），之后**无需电脑** | 真机体验版、日常使用 |
+| **本地 Mock** | `cd mock-server && npm start`，手机与电脑同一 Wi-Fi | 离线开发 |
+
+切换方式：改 `demo-app/utils/config.js` 里的 `DATA_SOURCE`（`cloud` / `mock`），重新编译即可，**页面代码零改动**。
 
 ## Demo 功能导览
 
 | 页面 | 演示知识点 | 对应源码 |
 |---|---|---|
-| 首页 | 时段问候、wx.request 健康检查、switchTab 跳转 | `pages/index/` |
-| 列表页 | 接口分页加载、下拉刷新、上拉加载更多、data-* 传参 | `pages/list/` |
+| 首页 | 时段问候、数据源健康检查、switchTab 跳转 | `pages/index/` |
+| 列表页 | 分页加载、下拉刷新、上拉加载更多、data-* 传参 | `pages/list/` |
 | 详情页 | onLoad 接收 url 参数、动态设置导航栏标题、错误重试 | `pages/detail/` |
-| 关于页 | 新版系统信息 API、剪贴板、版本回退兼容写法 | `pages/about/` |
-| 全局 | 请求封装（Promise + 业务码）、tabBar 配置、rpx 布局 | `utils/request.js`、`app.json`、`app.wxss` |
+| 关于页 | 数据源信息、云数据库初始化、系统信息 API | `pages/about/` |
+| 游戏页 | Canvas 2D、RAF 循环、相对触控、Boss 战、WebAudio 音效 | `pages/game/` |
+| 全局 | 双数据源架构、请求封装、tabBar 配置、rpx 布局 | `utils/`、`app.js`、`app.json` |
 
 ## 小游戏（星河战机）
 
@@ -86,6 +95,33 @@ npm start
 
 **加一个新接口**：打开 `mock-server/server.js`，仿照 `/api/health` 的写法加一个
 `if (pathname === '/api/xxx') { ... }` 分支即可，改完保存，Ctrl+C 后重新 `npm start`。
+
+## 云开发模式（默认）
+
+数据通过**云函数 `articles` + 云数据库集合 `articles`** 访问，手机/体验版无需电脑上的 mock 服务。
+
+### 首次部署（只需一次）
+
+1. **完全重启开发者工具**：`project.config.json` 已配置 `cloudfunctionRoot: "cloudfunctions/"`，重启后 `cloudfunctions` 目录才会显示云函数图标
+2. **确认云环境**：`utils/config.js` 的 `CLOUD_ENV` 与环境 ID 一致（当前：`cloud1-d8g774cfa69b034d6`）
+3. **部署云函数**：右键 `cloudfunctions/articles` →「上传并部署：云端安装依赖」，等待成功
+4. **初始化数据**：重新编译 → 进入「关于」页 → 点「初始化示例数据」（自动建集合 + 写入 10 条示例，幂等）
+5. 回首页看到「数据源状态：云开发 · 已连接」、列表页有数据即完成
+
+### 云函数接口（单函数多 action）
+
+| action | 说明 | 参数 |
+|---|---|---|
+| `ping` | 健康检查 | 无 |
+| `list` | 文章列表（不含正文） | `page`、`size`、`keyword` |
+| `detail` | 文章详情 | `id` |
+| `seed` | 初始化示例数据（幂等） | 无 |
+
+### 注意
+
+- 云函数修改后必须**重新上传部署**才生效
+- 免费额度对学习足够；长期高频使用请关注控制台用量
+- 想切回本地：把 `DATA_SOURCE` 改为 `'mock'` 并启动 `mock-server`，页面零改动
 
 ## 开发与质量检查
 
